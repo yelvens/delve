@@ -53,6 +53,8 @@ val targets = arrayOf(
 
         "linux/ppc64le/1.25",
 
+        "linux/loong64/1.25",
+
         "windows/amd64/1.25",
         "windows/amd64/tip",
 
@@ -212,6 +214,7 @@ class TestBuild(val os: String, val arch: String, val version: String, buildId: 
                 val dockerArch = when (arch) {
                     "386" -> "i386"
                     "arm64" -> "arm64v8"
+                    "loong64" -> "loongarch64"
                     else -> {
                         arch
                     }
@@ -222,11 +225,15 @@ class TestBuild(val os: String, val arch: String, val version: String, buildId: 
                         dockerArch
                     }
                 }
+                val dockerImage = when (arch) {
+                    "loong64" -> "$dockerArch/debian:latest"
+                    else -> "$dockerArch/ubuntu:20.04"
+                }
                 dockerCommand {
-                    name = "Pull Ubuntu"
+                    name = "Pull Image"
                     commandType = other {
                         subCommand = "pull"
-                        commandArgs = "$dockerArch/ubuntu:20.04"
+                        commandArgs = dockerImage
                     }
                 }
                 dockerCommand {
@@ -239,7 +246,7 @@ class TestBuild(val os: String, val arch: String, val version: String, buildId: 
                         --env CI=true
                         --privileged
                         --platform linux/$dockerPlatformArch
-                        $dockerArch/ubuntu:20.04
+                        $dockerImage
                         /delve/_scripts/test_linux.sh ${"go$version"} $arch
                     """.trimIndent()
                     }
